@@ -1,10 +1,7 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
-	"log"
-	"os"
 	"strconv"
 	"time"
 
@@ -33,7 +30,9 @@ func NewCostExplorer() (*CostExplorer, error) {
 	}, nil
 }
 
-func (c *CostExplorer) GetCostAndUsage(start time.Time, end time.Time) (*costexplorer.GetCostAndUsageOutput, error) {
+func (c *CostExplorer) GetCostAndUsage(
+	start time.Time, end time.Time,
+) (*costexplorer.GetCostAndUsageOutput, error) {
 	graudarity := aws.String("DAILY")
 	timePeriod := &costexplorer.DateInterval{
 		Start: aws.String(start.Format("2006-01-02")),
@@ -65,7 +64,7 @@ func (c *CostExplorer) GetCostAndUsage(start time.Time, end time.Time) (*costexp
 	return o, nil
 }
 
-func FormatCost(cost *costexplorer.GetCostAndUsageOutput) ([]*DayCost, error) {
+func FormatFlatCost(cost *costexplorer.GetCostAndUsageOutput) ([]*DayCost, error) {
 	res := cost.ResultsByTime
 	var days []*DayCost
 	for _, c := range res {
@@ -84,47 +83,12 @@ func FormatCost(cost *costexplorer.GetCostAndUsageOutput) ([]*DayCost, error) {
 	return days, nil
 }
 
-func main() {
-	// cost explorer
-
-	// post to slack
-
-	c, err := NewCostExplorer()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	now := time.Now()
-	start := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC)
-	end := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
-	res, err := c.GetCostAndUsage(start, end)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	days, err := FormatCost(res)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	b, err := json.MarshalIndent(days, "", "  ")
-	if err != nil {
-		log.Fatal(err)
-	}
-	f, err := os.Create("cost.json")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer f.Close()
-	f.Write(b)
-
+func AggrigateCost([]*DayCost) ([]*DayCost, error) {
+	// TODO: implement
+	return nil, nil
 }
 
-// func FetchCost() []Cost {
-// 	// fetch cost from aws
-// 	return []Cost{}
-// }
-//
-// func PostToSlack(costs []Cost) {
-// 	// post to slack
-// }
+func FormatMessage([]*DayCost) (string, error) {
+	// TODO: implement
+	return "", nil
+}
