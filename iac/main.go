@@ -4,11 +4,13 @@ import (
 	"fmt"
 
 	"github.com/pulumi/pulumi-aws/sdk/v4/go/aws/lambda"
+	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/cloudwatch"
 	"github.com/pulumi/pulumi-aws/sdk/v6/go/aws/iam"
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
-var projectTag = "aws-billing-lambda"
+var projectTag = "aws-billing"
+var CRON = "00 00 * * ? *"
 
 func main() {
 	pulumi.Run(func(ctx *pulumi.Context) error {
@@ -78,10 +80,10 @@ func main() {
 				Runtime: pulumi.String("go1.x"),
 				Handler: pulumi.String("handler"),
 				Role:    iamLambda.Arn,
-				Code:    pulumi.NewFileArchive("../src/handler.zip"), // TODO: 修正
+				Code:    pulumi.NewFileArchive("../bin/handler.zip"),
 				Environment: &lambda.FunctionEnvironmentArgs{
 					Variables: pulumi.StringMap{
-						"SLACK_WEBHOOK_URL": pulumi.String(""),
+						"SLACK_WEBHOOK_URL": pulumi.String(""), // TODO
 					},
 				},
 			})
@@ -90,7 +92,39 @@ func main() {
 		}
 		ctx.Export(resourceName, lambdaFunc.ID())
 
-		// TODO: EventBridge
+		resourceName = fmt.Sprintf("%s-lambda-schedule", projectTag)
+		eventBridgeSchedule, err := cloudwatch.NewEventRule(
+			ctx,
+			resourceName,
+			&cloudwatch.EventRuleArgs{
+				Description:        pulumi.String(resourceName),
+				ScheduleExpression: pulumi.String(fmt.Sprintf("cron(%s)", CRON)),
+				IsEnabled:          pulumi.Bool(true),
+				Name:               pulumi.String(resourceName),
+			})
+		ctx.Export(resourceName, eventBridgeSchedule.ID())
+
+		resourceName = fmt.Sprintf("%s-lambda-event-target", projectTag)
+		eventTarget, err := cloudwatch.NewEventTarget(
+			ctx,
+			resourceName,
+			&cloudwatch.EventTargetArgs{
+				Rule: eventBridgeSchedule.Name,
+				Arn:  lambdaFunc.Arn,
+			})
+		ctx.Export(resourceName, eventTarget.ID())
+
+		resourceName = fmt.Sprintf("%s-lambda-cloudwatch-permission", projectTag)
+		lambdaPermission, err := lambda.NewPermission(
+			ctx,
+			resourceName,
+			&lambda.PermissionArgs{
+				Action:    pulumi.String("lambda:InvokeFunction"),
+				Function:  lambdaFunc.Name,
+				Principal: pulumi.String("events.amazonaws.com"),
+				SourceArn: eventBridgeSchedule.Arn,
+			})
+		ctx.Export(resourceName, lambdaPermission.ID())
 
 		return nil
 	})

@@ -1,11 +1,9 @@
 .PHONY: help build generate
 .DEFAULT_GOAL := help
 
-// TODO: 修正
 build: ## Build app
-	cd src && \
-	GOOS=linux GOARCH=amd64 go build -o handler && \
-	zip handler.zip handler
+	GOOS=linux GOARCH=amd64 go build -o ../bin/handler ./src && \
+	zip -j ./bin/handler.zip ./bin/handler
 
 generate: ## Generate codes
 	go generate ./...
