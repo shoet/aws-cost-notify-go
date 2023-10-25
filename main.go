@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"net/http"
 	"text/tabwriter"
 	"time"
 )
@@ -19,7 +20,11 @@ func main() {
 		log.Fatal(err)
 	}
 
-	slack := NewSlackClient(cfg.WebHookUrl)
+	client := http.Client{}
+	slack, err := NewSlackClient(&client, cfg.WebHookUrl)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	now := time.Now()
 	start := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC)
@@ -44,18 +49,23 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Println(message)
-	_ = slack
+	dd := fmt.Sprintf(
+		"%s ~ %s",
+		start.Format("2006-01-02"),
+		end.Format("2006-01-02"))
 
-	// if err := slack.SendMessage(message, cfg.SlackChannelBilling); err != nil {
-	// 	log.Fatal(err)
-	// }
+	message = fmt.Sprintf("%s\n```%s```", dd, message)
+
+	if err := slack.SendMessage(message, cfg.SlackChannelBilling); err != nil {
+		log.Fatal(err)
+	}
 }
 
 func FormatMessage(c ResourceCost) (string, error) {
 	var buf bytes.Buffer
 	tWriter := tabwriter.NewWriter(&buf, 0, 0, 0, ' ', tabwriter.Debug)
 	fmt.Fprintln(tWriter, "Service", "\t", "Cost($)")
+	fmt.Fprintln(tWriter, "==========", "\t", "==========")
 	for _, a := range c.ToArray() {
 		fmt.Fprintln(tWriter, a[0], "\t", a[1])
 	}
