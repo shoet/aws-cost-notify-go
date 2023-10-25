@@ -16,6 +16,29 @@ type DayCost struct {
 	Resource string  `json:"resource"`
 }
 
+type Costs []*DayCost
+
+type ResourceCost map[string]float64
+
+func (c Costs) AggrigateResource() ResourceCost {
+	tmp := make(map[string]float64)
+	for _, v := range c {
+		tmp[v.Resource] += v.Cost
+	}
+	return tmp
+}
+
+func (r ResourceCost) ToArray() [][]string {
+	/*
+		example: {{"EC", 100.00}, {"S3", 200.00}}
+	*/
+	arr := make([][]string, 0, len(r))
+	for k, v := range r {
+		arr = append(arr, []string{k, strconv.FormatFloat(v, 'f', 2, 64)})
+	}
+	return arr
+}
+
 type CostExplorer struct {
 	cli *costexplorer.CostExplorer
 }
@@ -83,12 +106,6 @@ func FormatFlatCost(cost *costexplorer.GetCostAndUsageOutput) ([]*DayCost, error
 	return days, nil
 }
 
-func AggrigateCost([]*DayCost) ([]*DayCost, error) {
-	// TODO: implement
-	return nil, nil
-}
-
-func FormatMessage([]*DayCost) (string, error) {
-	// TODO: implement
-	return "", nil
+func AggrigateCost(c Costs) (ResourceCost, error) {
+	return c.AggrigateResource(), nil
 }

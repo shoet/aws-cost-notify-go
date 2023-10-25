@@ -1,7 +1,10 @@
 package main
 
 import (
+	"bytes"
+	"fmt"
 	"log"
+	"text/tabwriter"
 	"time"
 )
 
@@ -41,7 +44,21 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if err := slack.SendMessage(message, cfg.SlackChannelBilling); err != nil {
-		log.Fatal(err)
+	fmt.Println(message)
+	_ = slack
+
+	// if err := slack.SendMessage(message, cfg.SlackChannelBilling); err != nil {
+	// 	log.Fatal(err)
+	// }
+}
+
+func FormatMessage(c ResourceCost) (string, error) {
+	var buf bytes.Buffer
+	tWriter := tabwriter.NewWriter(&buf, 0, 0, 0, ' ', tabwriter.Debug)
+	fmt.Fprintln(tWriter, "Service", "\t", "Cost($)")
+	for _, a := range c.ToArray() {
+		fmt.Fprintln(tWriter, a[0], "\t", a[1])
 	}
+	tWriter.Flush()
+	return buf.String(), nil
 }
