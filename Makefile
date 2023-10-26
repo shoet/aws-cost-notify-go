@@ -2,7 +2,7 @@
 .DEFAULT_GOAL := help
 
 build: ## Build app
-	GOOS=linux GOARCH=amd64 go build -o ../bin/handler ./src && \
+	GOOS=linux GOARCH=amd64 go build -o ./bin/handler ./src && \
 	zip -j ./bin/handler.zip ./bin/handler
 
 generate: ## Generate codes

@@ -8,3 +8,16 @@
   - or タグごとに集計
 - slack に投稿
 - webhookurl を引き渡す
+
+## デプロイ
+
+```
+cd aws-cost-notify-go
+
+# 1 build binary
+make build
+
+# 2 deploy by pulumi
+cd iac
+pulumi up
+```
