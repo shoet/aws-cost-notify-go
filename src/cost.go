@@ -28,6 +28,14 @@ func (c Costs) AggrigateResource() ResourceCost {
 	return tmp
 }
 
+func (r ResourceCost) Total() (float64, error) {
+	var total float64
+	for _, v := range r {
+		total += v
+	}
+	return total, nil
+}
+
 func (r ResourceCost) ToArray() [][]string {
 	/*
 		example: {{"EC", 100.00}, {"S3", 200.00}}

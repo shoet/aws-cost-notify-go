@@ -15,5 +15,5 @@ func Test_SlackClient_SendMessage(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create slack client: %v", err)
 	}
-	slack.SendMessage("test", cfg.SlackChannelBilling)
+	slack.SendMessage("test")
 }
