@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"sort"
 	"strconv"
 	"text/tabwriter"
 	"time"
@@ -67,7 +68,14 @@ func FormatMessage(c ResourceCost) (string, error) {
 	tWriter := tabwriter.NewWriter(&buf, 0, 0, 0, ' ', tabwriter.Debug)
 	fmt.Fprintln(tWriter, "Service", "\t", "Cost($)")
 	fmt.Fprintln(tWriter, "==========", "\t", "==========")
-	for _, a := range c.ToArray() {
+	resultArray := c.ToArray()
+	sort.SliceStable(
+		resultArray,
+		func(i, j int) bool {
+			return resultArray[i][0] < resultArray[j][0]
+		},
+	)
+	for _, a := range resultArray {
 		fmt.Fprintln(tWriter, a[0], "\t", a[1])
 	}
 	total, err := c.Total()
