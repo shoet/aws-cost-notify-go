@@ -8,7 +8,6 @@ import (
 	"sort"
 	"strconv"
 	"text/tabwriter"
-	"time"
 )
 
 func PostBilling() {
@@ -28,9 +27,9 @@ func PostBilling() {
 		log.Fatal(err)
 	}
 
-	now := time.Now()
-	start := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC)       // 月初
-	end := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC) // 今日
+	clocker := &RealClocker{}
+	start, end := GetCurrentMonthPeriod(clocker)
+
 	res, err := c.GetCostAndUsage(start, end)
 	if err != nil {
 		log.Fatal(err)
